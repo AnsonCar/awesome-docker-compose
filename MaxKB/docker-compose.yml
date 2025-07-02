@@ -1,0 +1,11 @@
+services:
+    1panel:
+        image: cr2.fit2cloud.com/1panel/maxkb
+        volumes:
+            - './.maxkb:/var/lib/postgresql/data'
+        ports:
+            - '8080:8080'
+        container_name: maxkb
+
+# admin | MaxKB@123..
+

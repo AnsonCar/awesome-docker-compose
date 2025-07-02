@@ -1,0 +1,19 @@
+services:
+    wg-easy:
+        image: weejewel/wg-easy
+        restart: unless-stopped
+        sysctls:
+            - net.ipv4.ip_forward=1
+            - net.ipv4.conf.all.src_valid_mark=1
+        cap_add:
+            - SYS_MODULE
+            - NET_ADMIN
+        ports:
+            - '51821:51821/tcp'
+            - '51822:51820/udp'
+        volumes:
+            - '~/.wg-easy:/etc/wireguard'
+        environment:
+            - PASSWORD=admin
+            - WG_HOST=192.168.2.104
+        container_name: wg-easy

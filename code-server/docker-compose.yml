@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  vscode-server:
+    image: ruanbekker/vscode-server:slim
+    restart: always
+    environment:
+      - PASSWORD=password
+      - DOCKER_USER=anson
+    ports:
+      - 8090:8080
+    volumes:
+      - ./workspace:/home/coder/workspace
+      - ./config:/home/coder/.config

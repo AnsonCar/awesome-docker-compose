@@ -1,0 +1,19 @@
+FROM mongo:latest
+
+WORKDIR /app
+
+ADD . .
+
+# CMD mongoimport --host localhost:27017 --db admin --collection user --type json --file /setup/user.js --jsonArray --drop && \
+#     /bin/sleep infinity
+
+CMD mongoimport \
+    --uri "mongodb://admin:admin@localhost:27017/" \
+    --authenticationDatabase=admin \
+    --db admin --collection xxx --type json \
+    --file /app/xxx.json --jsonArray --drop && \
+    mongoimport \
+    --uri "mongodb://admin:admin@localhost:27017/" \
+    --authenticationDatabase=admin \
+    --db admin --collection xxx --type json \
+    --file /app/xxx.json --jsonArray --drop
