@@ -1,0 +1,202 @@
+# docker network create ReverseProxy
+networks:
+  ReverseProxy:
+    external: true
+
+services:
+  reverse-proxy:
+    # The official v3 Traefik docker image
+    image: traefik:v3.2
+    container_name: traefik-reverse-proxy
+    # Enables the web UI and tells Traefik to listen to docker
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      # - "8888:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.yml:/etc/traefik/traefik.yml
+    restart: always
+    networks:
+      - ReverseProxy
+    labels:
+      - "traefik.enable=true"
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr
+    environment:
+      - PORT=5055
+      - TZ=Asia/Tashkent
+      - LOG_LEVEL=debug
+    container_name: jellyseerr
+    ports:
+      - 5055:5055
+    restart: always
+    volumes:
+      - "./jellyseerr/config:/app/config"
+    networks:
+      - ReverseProxy
+    labels:
+      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.localhost`)"
+
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    ports:
+      - 8096:8096
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - type: bind
+        source: ./jellyfin/media
+        target: /media
+      - type: bind
+        source: ./jellyfin/media2
+        target: /media2
+        read_only: true
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+    networks:
+      - ReverseProxy
+    labels:
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.localhost`)"
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Asia/Hong_Kong
+    volumes:
+      - ./radarr/radarr/data:/config
+      - ./radarr/movies:/movies
+      - ./radarr/download-client-downloads:/downloads
+    ports:
+      - 7878:7878
+    restart: always
+    networks:
+      - ReverseProxy
+    labels:
+      - "traefik.http.routers.radarr.rule=Host(`radarr.localhost`)"
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Asia/Hong_Kong
+    volumes:
+      - ./sonarr/sonarr/data:/config
+      - ./sonarr/tvseries:/tv
+      - ./sonarr/downloadclient-downloads:/downloads
+    ports:
+      - 8989:8989
+    restart: always
+    networks:
+      - ReverseProxy
+    labels:
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.localhost`)"
+  
+  ####
+  # INDEXERS
+  ####
+  jackett:
+    image: lscr.io/linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Etc/UTC
+      - AUTO_UPDATE=true #optional
+      - RUN_OPTS= #optional
+    volumes:
+      - ./jackett/data:/config
+      - ./jackett/blackhole:/downloads
+    ports:
+      - 9117:9117
+    restart: always
+    networks:
+      - ReverseProxy
+    labels:
+      - "traefik.http.routers.jackett.rule=Host(`jackett.localhost`)"
+    
+  ###
+  # BT TOOLS
+  ###
+  deluge:
+    # username admin
+    # password deluge
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Asia/Hong_Kong
+      - DELUGE_LOGLEVEL=error #optional
+    volumes:
+      - ./deluge/config:/config
+      - ./deluge/downloads:/downloads
+    ports:
+      - 8112:8112
+      - 6881:6881
+      - 6881:6881/udp
+      - 58846:58846 #optional
+    restart: always
+    networks:
+      - ReverseProxy
+    labels:
+      - "traefik.http.routers.deluge.rule=Host(`deluge.localhost`)"
+      - "traefik.http.services.deluge.loadbalancer.server.port=8112"
+          
+  # utorrent:
+  #   image: ekho/utorrent:latest
+  #   volumes:
+  #     - ./utorrent/settings:/utorrent/settings
+  #     - ./utorrent/data/dir:/data
+  #     - ./utorrent/data/dir2:/abs-path-dir
+  #   environment:
+  #     UID: 0
+  #     GID: 0
+  #     webui: ng
+  #     dir_autoload_delete: true
+  #     dir_download: subdir1,/abs-path-dir
+  #   ports:
+  #     - 8080:8080
+  #     - 6881:6881
+  #     - 6881:6881/udp
+  #   restart: always
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   networks:
+  #     - ReverseProxy
+
+  # qbittorrent:
+  #   image: lscr.io/linuxserver/qbittorrent:latest
+  #   container_name: qbittorrent
+  #   environment:
+  #     - PUID=0
+  #     - PGID=0
+  #     - TZ=Asia/Hong_Kong
+  #     - WEBUI_PORT=8080
+  #     - TORRENTING_PORT=6881
+  #   volumes:
+  #     - /path/to/qbittorrent/appdata:/config
+  #     - /path/to/downloads:/downloads #optional
+  #   ports:
+  #     - 8080:8080
+  #     - 6881:6881
+  #     - 6881:6881/udp
+  #   restart: always
+  #   networks:
+  #     - ReverseProxy
