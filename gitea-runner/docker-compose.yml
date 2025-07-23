@@ -4,7 +4,7 @@ services:
     container_name: gitea-docker-runner
     environment:
       CONFIG_FILE: /config.yaml
-      GITEA_INSTANCE_URL: http://gitea.xxxxx.com
+      GITEA_INSTANCE_URL: "${URL}"
       GITEA_RUNNER_REGISTRATION_TOKEN: "${REGISTRATION_TOKEN}"
       GITEA_RUNNER_NAME: gitea-runner
       GITEA_RUNNER_LABELS: gitea-runner
