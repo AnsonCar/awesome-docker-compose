@@ -1,0 +1,12 @@
+services:
+  frps: 
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./frps.toml:/app/frps.tmol
+    ports:
+      - "7000:7000"
+      - "7500:7500"
+      - "8000-9999:8000-9999"
+    restart: unless-stopped

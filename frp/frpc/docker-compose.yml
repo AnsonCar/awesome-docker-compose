@@ -1,0 +1,11 @@
+services:
+  frpc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./frpc.toml:/app/frpc.tmol
+    restart: unless-stopped
+  uptime-kuma:
+      image: 'louislam/uptime-kuma:1'
+      container_name: uptime-kuma

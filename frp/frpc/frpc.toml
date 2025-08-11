@@ -1,0 +1,9 @@
+serverAddr = "host.docker.internal"
+serverPort = 7000
+
+[[proxies]]
+name = "uptime-kuma"
+type = "tcp"
+localIP = "uptime-kuma"
+localPort = 3001
+remotePort = 8000
