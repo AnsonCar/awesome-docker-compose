@@ -24,7 +24,7 @@
 # WARNING: if you're exposing Penpot to the internet, you should remove the flags
 # 'disable-secure-session-cookies' and 'disable-email-verification'
 x-flags: &penpot-flags
-  PENPOT_FLAGS: disable-email-verification enable-smtp enable-prepl-server disable-secure-session-cookies
+  PENPOT_FLAGS: disable-email-verification disable-smtp enable-prepl-server enable-secure-session-cookies
 
 x-uri: &penpot-public-uri
   PENPOT_PUBLIC_URI: http://localhost:9001
@@ -162,20 +162,6 @@ services:
       PENPOT_TELEMETRY_ENABLED: true
       PENPOT_TELEMETRY_REFERER: compose
 
-      ## Example SMTP/Email configuration. By default, emails are sent to the mailcatch
-      ## service, but for production usage it is recommended to setup a real SMTP
-      ## provider. Emails are used to confirm user registrations & invitations. Look below
-      ## how the mailcatch service is configured.
-
-      PENPOT_SMTP_DEFAULT_FROM: no-reply@example.com
-      PENPOT_SMTP_DEFAULT_REPLY_TO: no-reply@example.com
-      PENPOT_SMTP_HOST: penpot-mailcatch
-      PENPOT_SMTP_PORT: 1025
-      PENPOT_SMTP_USERNAME:
-      PENPOT_SMTP_PASSWORD:
-      PENPOT_SMTP_TLS: false
-      PENPOT_SMTP_SSL: false
-
   penpot-exporter:
     image: "penpotapp/exporter:${PENPOT_VERSION:-latest}"
     restart: always
@@ -239,16 +225,3 @@ services:
       # although this should not be necessary.
       - VALKEY_EXTRA_FLAGS=--maxmemory 128mb --maxmemory-policy volatile-lfu
 
-  ## A mailcatch service, used as temporal SMTP server. You can access via HTTP to the
-  ## port 1080 for read all emails the penpot platform has sent. Should be only used as a
-  ## temporal solution while no real SMTP provider is configured.
-
-  penpot-mailcatch:
-    image: sj26/mailcatcher:latest
-    restart: always
-    expose:
-      - '1025'
-    ports:
-      - "1080:1080"
-    networks:
-      - penpot
